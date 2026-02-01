@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Hệ thống Giám sát Không khí AI</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #eceff1; text-align: center; }
+        .container { width: 80%; margin: 30px auto; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .status-box { margin-top: 20px; padding: 15px; border-radius: 8px; font-weight: bold; font-size: 20px; }
+        .good { background-color: #c8e6c9; color: #2e7d32; border: 1px solid #2e7d32; }
+        .bad { background-color: #ffcdd2; color: #c62828; border: 1px solid #c62828; }
+        .neutral { background-color: #fff9c4; color: #fbc02d; border: 1px solid #fbc02d; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>BIỂU ĐỒ GIÁM SÁT CHẤT LƯỢNG KHÔNG KHÍ (AI EDGE)</h2>
+    <canvas id="airChart"></canvas>
+    
+    <div id="statusResult" class="status-box neutral">
+        Đang chờ dữ liệu từ Kit AI...
+    </div>
+</div>
+
+<script>
+    // 1. Cấu hình đồ thị Chart.js
+    const ctx = document.getElementById('airChart').getContext('2d');
+    const airChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: [], // Thời gian sẽ hiển thị ở đây
+            datasets: [{
+                label: 'Chỉ số chất lượng khí (AQI)',
+                data: [],
+                borderColor: '#2196f3',
+                backgroundColor: 'rgba(33, 150, 243, 0.2)',
+                borderWidth: 2,
+                tension: 0.3,
+                fill: true
+            }]
+        },
+        options: {
+            scales: {
+                y: { beginAtZero: true }
+            }
+        }
+    });
+
+    // 2. Kết nối Socket.IO tới Python Server
+    const socket = io();
+
+    socket.on('update_data', function(msg) {
+        const value = parseFloat(msg.value);
+        const now = new Date().toLocaleTimeString();
+
+        // Cập nhật dữ liệu vào đồ thị
+        if (airChart.data.labels.length > 15) { // Giữ lại 15 điểm gần nhất
+            airChart.data.labels.shift();
+            airChart.data.datasets[0].data.shift();
+        }
+        airChart.data.labels.push(now);
+        airChart.data.datasets[0].data.push(value);
+        airChart.update();
+
+        // 3. Logic Nhận dạng Tốt/Xấu và Đưa ra nhận xét
+        const statusDiv = document.getElementById('statusResult');
+        
+        // Giả sử ngưỡng: < 50 là Tốt, 50-100 là Trung bình, > 100 là Xấu
+        if (value < 50) {
+            statusDiv.innerText = "Kết quả: TỐT - Không khí trong lành, an toàn cho sức khỏe.";
+            statusDiv.className = "status-box good";
+        } else if (value >= 50 && value <= 100) {
+            statusDiv.innerText = "Kết quả: TRUNG BÌNH - Có thể gây khó chịu cho người nhạy cảm.";
+            statusDiv.className = "status-box neutral";
+        } else {
+            statusDiv.innerText = "Kết quả: XẤU - Cảnh báo! Không khí ô nhiễm, hãy bật máy lọc khí.";
+            statusDiv.className = "status-box bad";
+        }
+    });
+</script>
+
+</body>
+</html>
