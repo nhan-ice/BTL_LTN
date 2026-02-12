@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <title>Hệ thống Giám sát Không khí AI</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
-    
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #eceff1; text-align: center; }
         .container { width: 80%; margin: 30px auto; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
@@ -27,12 +27,11 @@
 </div>
 
 <script>
-    // 1. Cấu hình đồ thị Chart.js
     const ctx = document.getElementById('airChart').getContext('2d');
     const airChart = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: [], // Thời gian sẽ hiển thị ở đây
+            labels: [], 
             datasets: [{
                 label: 'Chỉ số chất lượng khí (AQI)',
                 data: [],
@@ -44,41 +43,51 @@
             }]
         },
         options: {
-            scales: {
-                y: { beginAtZero: true }
-            }
+            scales: { y: { beginAtZero: true } },
+            animation: false 
         }
     });
 
-    // 2. Kết nối Socket.IO tới Python Server
-    const socket = io();
+    // Kết nối tới Server Python của Nhân
+ const socket = io("http://192.168.1.7:5000", {
+    transports: ["polling"],
+    reconnectionDelay: 5000 
+});
+
+socket.on('connect', () => {
+    console.log("--- CHÚC MỪNG! ĐÃ KẾT NỐI THÀNH CÔNG ---");
+});
 
     socket.on('update_data', function(msg) {
-        const value = parseFloat(msg.value);
-        const now = new Date().toLocaleTimeString();
-
-        // Cập nhật dữ liệu vào đồ thị
-        if (airChart.data.labels.length > 15) { // Giữ lại 15 điểm gần nhất
-            airChart.data.labels.shift();
-            airChart.data.datasets[0].data.shift();
-        }
-        airChart.data.labels.push(now);
-        airChart.data.datasets[0].data.push(value);
-        airChart.update();
-
-        // 3. Logic Nhận dạng Tốt/Xấu và Đưa ra nhận xét
-        const statusDiv = document.getElementById('statusResult');
+        // Lấy dữ liệu thô từ Python
+        let rawData = msg.value;
         
-        // Giả sử ngưỡng: < 50 là Tốt, 50-100 là Trung bình, > 100 là Xấu
-        if (value < 50) {
-            statusDiv.innerText = "Kết quả: TỐT - Không khí trong lành, an toàn cho sức khỏe.";
-            statusDiv.className = "status-box good";
-        } else if (value >= 50 && value <= 100) {
-            statusDiv.innerText = "Kết quả: TRUNG BÌNH - Có thể gây khó chịu cho người nhạy cảm.";
-            statusDiv.className = "status-box neutral";
-        } else {
-            statusDiv.innerText = "Kết quả: XẤU - Cảnh báo! Không khí ô nhiễm, hãy bật máy lọc khí.";
-            statusDiv.className = "status-box bad";
+        // Dùng Regex để chỉ lấy con số (phòng trường hợp dữ liệu có chữ 'Sensor_Value:')
+        let value = parseFloat(rawData.toString().replace(/[^0-9.]/g, ''));
+        
+        const now = new Date().toLocaleTimeString(); 
+        
+        // In ra để Nhân kiểm chứng số thực tế
+        console.log("Số thực vẽ lên biểu đồ:", value);
+
+        if (!isNaN(value)) { // Chỉ vẽ nếu là con số hợp lệ
+            if (airChart.data.labels.length > 15) { 
+                airChart.data.labels.shift();
+                airChart.data.datasets[0].data.shift();
+            }
+            airChart.data.labels.push(now);
+            airChart.data.datasets[0].data.push(value);
+            airChart.update();
+
+            // Cập nhật trạng thái hiển thị
+            const statusDiv = document.getElementById('statusResult');
+            if (value < 500) {
+                statusDiv.innerText = "Kết quả: TỐT (" + value + ")";
+                statusDiv.className = "status-box good";
+            } else {
+                statusDiv.innerText = "Kết quả: CẦN CHÚ Ý (" + value + ")";
+                statusDiv.className = "status-box bad";
+            }
         }
     });
 </script>
