@@ -48,7 +48,6 @@
         }
     });
 
-    // Kết nối tới Server Python của Nhân
  const socket = io("http://192.168.1.7:5000", {
     transports: ["polling"],
     reconnectionDelay: 5000 
@@ -59,18 +58,15 @@ socket.on('connect', () => {
 });
 
     socket.on('update_data', function(msg) {
-        // Lấy dữ liệu thô từ Python
         let rawData = msg.value;
         
-        // Dùng Regex để chỉ lấy con số (phòng trường hợp dữ liệu có chữ 'Sensor_Value:')
         let value = parseFloat(rawData.toString().replace(/[^0-9.]/g, ''));
         
         const now = new Date().toLocaleTimeString(); 
         
-        // In ra để Nhân kiểm chứng số thực tế
         console.log("Số thực vẽ lên biểu đồ:", value);
 
-        if (!isNaN(value)) { // Chỉ vẽ nếu là con số hợp lệ
+        if (!isNaN(value)) { 
             if (airChart.data.labels.length > 15) { 
                 airChart.data.labels.shift();
                 airChart.data.datasets[0].data.shift();
@@ -79,7 +75,6 @@ socket.on('connect', () => {
             airChart.data.datasets[0].data.push(value);
             airChart.update();
 
-            // Cập nhật trạng thái hiển thị
             const statusDiv = document.getElementById('statusResult');
             if (value < 500) {
                 statusDiv.innerText = "Kết quả: TỐT (" + value + ")";
