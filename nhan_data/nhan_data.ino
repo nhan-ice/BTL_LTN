@@ -25,7 +25,7 @@ void loop() {
 
     if (cleanData.length() > 0) {
       HTTPClient http;
-      http.begin("http://192.168.1.7:5000/update"); 
+      http.begin("https://unresigned-monopodially-fermina.ngrok-free.dev/update"); 
       http.addHeader("Content-Type", "text/plain");
       
       int httpResponseCode = http.POST(cleanData); // Đẩy dữ liệu đi
@@ -37,3 +37,4 @@ void loop() {
     }
   }
   delay(1000); 
+}

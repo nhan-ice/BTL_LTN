@@ -13,6 +13,6 @@ def update():
     val = request.data.decode('utf-8').strip()
     print(f"--- NHẬN QUA HTTP: {val} ---")
     socketio.emit('update_data', {'value': val})
-
+    return "OK"
 if __name__ == '__main__':
     socketio.run(app, host='0.0.0.0', port=5000, debug=False, allow_unsafe_werkzeug=True)
