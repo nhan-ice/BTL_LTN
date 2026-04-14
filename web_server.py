@@ -11,11 +11,9 @@ def index():
 @app.route('/update', methods=['POST'])
 def update():
     try:
-        # Nhận gói dữ liệu JSON từ ESP32 gửi lên
         data = request.get_json(force=True)
         print(f"--- NHẬN DỮ LIỆU: {data} ---")
         
-        # Gửi toàn bộ object data sang giao diện web
         socketio.emit('update_data', data)
         return "OK"
     except Exception as e:
