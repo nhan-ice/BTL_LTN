@@ -10,9 +10,17 @@ def index():
 
 @app.route('/update', methods=['POST'])
 def update():
-    val = request.data.decode('utf-8').strip()
-    print(f"--- NHẬN QUA HTTP: {val} ---")
-    socketio.emit('update_data', {'value': val})
-    return "OK"
+    try:
+        # Nhận gói dữ liệu JSON từ ESP32 gửi lên
+        data = request.get_json(force=True)
+        print(f"--- NHẬN DỮ LIỆU: {data} ---")
+        
+        # Gửi toàn bộ object data sang giao diện web
+        socketio.emit('update_data', data)
+        return "OK"
+    except Exception as e:
+        print("Lỗi định dạng dữ liệu:", e)
+        return "Format Error", 400
+
 if __name__ == '__main__':
-    socketio.run(app, host='0.0.0.0', port=5000, debug=False, allow_unsafe_werkzeug=True)
+    socketio.run(app, host='0.0.0.0', port=5000, debug=True)
