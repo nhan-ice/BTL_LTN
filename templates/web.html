@@ -12,7 +12,6 @@
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #eceff1; text-align: center; }
         .container { width: 90%; margin: 30px auto; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         
-        /* CSS cho các Tab */
         .tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
         .tab-btn { padding: 10px 20px; cursor: pointer; border: none; background: #e0e0e0; border-radius: 8px; font-weight: bold; font-size: 15px; transition: 0.3s; }
         .tab-btn:hover { background: #bdbdbd; }
@@ -21,12 +20,10 @@
         .tab-content { display: none; }
         .tab-content.active { display: block; }
 
-        /* CSS cho hộp cảnh báo AQI */
         .aqi-box { margin-top: 20px; padding: 15px; border-radius: 8px; font-size: 18px; text-align: center; transition: 0.3s; border: 1px solid #ccc; }
         .aqi-title { font-weight: bold; font-size: 22px; margin-bottom: 5px; }
         .aqi-desc { font-size: 16px; }
 
-        /* Bảng màu chuẩn theo ảnh AQI */
         .bg-tot { background-color: #00e400; color: black; border-color: #00a000;} 
         .bg-tb { background-color: #ffff00; color: black; border-color: #c0c000;}
         .bg-kem { background-color: #ff7e00; color: white; border-color: #c05c00;}
@@ -65,10 +62,8 @@
 </div>
 
 <script>
-    // --- Đăng ký plugin DataLabels để hiện số trên đồ thị ---
     Chart.register(ChartDataLabels);
 
-    // --- 1. XỬ LÝ CHUYỂN TAB ---
     function openTab(evt, tabName) {
         let tabcontent = document.getElementsByClassName("tab-content");
         for (let i = 0; i < tabcontent.length; i++) {
@@ -82,7 +77,6 @@
         evt.currentTarget.className += " active";
     }
 
-    // --- 2. CẬP NHẬT CẢNH BÁO AQI ---
     function updateAQIWarning(aqiValue) {
         const warningBox = document.getElementById('aqiWarningBox');
         let levelName = "";
@@ -103,7 +97,6 @@
             levelName = "NGUY HẠI"; message = "Báo động: Có thể ảnh hưởng nghiêm trọng đến sức khỏe mọi người"; cssClass = "bg-nguyhai";
         }
 
-        // Áp dụng class màu và nội dung
         warningBox.className = "aqi-box " + cssClass;
         warningBox.innerHTML = `
             <div class="aqi-title">Chỉ số AQI hiện tại: ${aqiValue} - ${levelName}</div>
@@ -111,7 +104,6 @@
         `;
     }
 
-    // --- 3. KHỞI TẠO ĐỒ THỊ VỚI LABEL SỐ ---
     const labelsData = []; 
     const charts = {};     
     
@@ -136,16 +128,15 @@
                 plugins: {
                     // Cấu hình hiện số trên đồ thị
                     datalabels: {
-                        align: 'top', // Chữ nằm trên chấm tròn
-                        color: color, // Màu chữ trùng màu đường viền
+                        align: 'top', 
+                        color: color, 
                         font: { weight: 'bold', size: 11 },
                         formatter: function(value) {
-                            return Math.round(value * 100) / 100; // Làm tròn 2 chữ số thập phân cho gọn
+                            return Math.round(value * 100) / 100; 
                         }
                     }
                 },
                 layout: {
-                    // Chừa khoảng trống phía trên để số không bị cắt lẹm
                     padding: { top: 30 } 
                 }
             }
@@ -160,7 +151,6 @@
     charts['Temp']     = createChart('chart_Temp', 'Nhiệt độ (°C)', 'rgba(233, 30, 99, 1)');  
     charts['Humidity'] = createChart('chart_Humidity', 'Độ ẩm (%)', 'rgba(0, 188, 212, 1)');  
 
-    // --- 4. NHẬN DỮ LIỆU TỪ SERVER ---
     const socket = io();
 
     socket.on('update_data', function(msg) {
@@ -177,7 +167,6 @@
                     dataset.push(value);
                     charts[key].update(); 
 
-                    // Lấy giá trị IAQ (hoặc Rel_IAQ) để làm mốc hiển thị cảnh báo y tế
                     if (key === 'IAQ' || key === 'Rel_IAQ') {
                         updateAQIWarning(value);
                     }
