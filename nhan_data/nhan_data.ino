@@ -68,7 +68,7 @@ void loop() {
 
       HTTPClient http;
       http.begin("https://unresigned-monopodially-fermina.ngrok-free.dev/update");
-      http.addHeader("Content-Type", "application/json"); // Đã chuyển thành json
+      http.addHeader("Content-Type", "application/json"); 
       
       int httpResponseCode = http.POST(payload);
       
