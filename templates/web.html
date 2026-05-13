@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Hệ thống Giám sát Không khí AI</title>
+    <title>Hệ thống Giám sát & Dự báo Không khí AI</title>
     
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
@@ -20,7 +20,7 @@
         .tab-content { display: none; }
         .tab-content.active { display: block; }
 
-        .aqi-box { margin-top: 20px; padding: 15px; border-radius: 8px; font-size: 18px; text-align: center; transition: 0.3s; border: 1px solid #ccc; }
+        .aqi-box { margin-top: 20px; padding: 15px; border-radius: 8px; font-size: 18px; text-align: center; transition: 0.3s; border: 1px solid #ccc; background-color: #fff; }
         .aqi-title { font-weight: bold; font-size: 22px; margin-bottom: 5px; }
         .aqi-desc { font-size: 16px; }
 
@@ -35,21 +35,21 @@
 <body>
 
 <div class="container">
-    <h2>BIỂU ĐỒ GIÁM SÁT CHẤT LƯỢNG KHÔNG KHÍ</h2>
+    <h2>HỆ THỐNG GIÁM SÁT & DỰ BÁO KHÔNG KHÍ (AI EDGE)</h2>
     
     <div id="aqiWarningBox" class="aqi-box">
-        <div class="aqi-title">Đang chờ dữ liệu...</div>
-        <div class="aqi-desc">Hệ thống đang kết nối với trạm quan trắc</div>
+        <div class="aqi-title">Đang thu thập mẫu dữ liệu...</div>
+        <div class="aqi-desc">AI sẽ đưa ra dự báo dạng số (Regression) sau mỗi 60 giây</div>
     </div>
 
     <div class="tabs" style="margin-top: 25px;">
-        <button class="tab-btn active" onclick="openTab(event, 'tab_Rel_IAQ')">Rel_IAQ</button>
-        <button class="tab-btn" onclick="openTab(event, 'tab_IAQ')">IAQ</button>
-        <button class="tab-btn" onclick="openTab(event, 'tab_TVOC')">TVOC</button>
-        <button class="tab-btn" onclick="openTab(event, 'tab_eCO2')">eCO2</button>
-        <button class="tab-btn" onclick="openTab(event, 'tab_EtOH')">EtOH</button>
-        <button class="tab-btn" onclick="openTab(event, 'tab_Temp')">Nhiệt độ</button>
-        <button class="tab-btn" onclick="openTab(event, 'tab_Humidity')">Độ ẩm</button>
+        <button class="tab-btn active" onclick="openTab(this, 'tab_Rel_IAQ')">Rel_IAQ</button>
+        <button class="tab-btn" onclick="openTab(this, 'tab_IAQ')">IAQ</button>
+        <button class="tab-btn" onclick="openTab(this, 'tab_TVOC')">TVOC</button>
+        <button class="tab-btn" onclick="openTab(this, 'tab_eCO2')">eCO2</button>
+        <button class="tab-btn" onclick="openTab(this, 'tab_EtOH')">EtOH</button>
+        <button class="tab-btn" onclick="openTab(this, 'tab_Temp')">Nhiệt độ</button>
+        <button class="tab-btn" onclick="openTab(this, 'tab_Humidity')">Độ ẩm</button>
     </div>
 
     <div id="tab_Rel_IAQ" class="tab-content active"><canvas id="chart_Rel_IAQ"></canvas></div>
@@ -64,7 +64,8 @@
 <script>
     Chart.register(ChartDataLabels);
 
-    function openTab(evt, tabName) {
+    // Đã thay đổi logic lấy Element để fix lỗi cú pháp
+    function openTab(btn, tabName) {
         let tabcontent = document.getElementsByClassName("tab-content");
         for (let i = 0; i < tabcontent.length; i++) {
             tabcontent[i].style.display = "none";
@@ -74,34 +75,7 @@
             tablinks[i].className = tablinks[i].className.replace(" active", "");
         }
         document.getElementById(tabName).style.display = "block";
-        evt.currentTarget.className += " active";
-    }
-
-    function updateAQIWarning(aqiValue) {
-        const warningBox = document.getElementById('aqiWarningBox');
-        let levelName = "";
-        let message = "";
-        let cssClass = "";
-
-        if (aqiValue <= 50) {
-            levelName = "TỐT"; message = "Không ảnh hưởng đến sức khỏe"; cssClass = "bg-tot";
-        } else if (aqiValue <= 100) {
-            levelName = "TRUNG BÌNH"; message = "Ở mức chấp nhận được. Nhóm nhạy cảm nên hạn chế thời gian ra ngoài"; cssClass = "bg-tb";
-        } else if (aqiValue <= 150) {
-            levelName = "KÉM"; message = "Ảnh hưởng xấu đến sức khỏe Nhóm nhạy cảm. Nhóm nhạy cảm nên hạn chế thời gian ra ngoài"; cssClass = "bg-kem";
-        } else if (aqiValue <= 200) {
-            levelName = "XẤU"; message = "Nhóm nhạy cảm tránh ra ngoài. Những người khác hạn chế ra ngoài"; cssClass = "bg-xau";
-        } else if (aqiValue <= 300) {
-            levelName = "RẤT XẤU"; message = "Cảnh báo sức khỏe khẩn cấp. Ảnh hưởng đến tất cả cư dân"; cssClass = "bg-ratxau";
-        } else {
-            levelName = "NGUY HẠI"; message = "Báo động: Có thể ảnh hưởng nghiêm trọng đến sức khỏe mọi người"; cssClass = "bg-nguyhai";
-        }
-
-        warningBox.className = "aqi-box " + cssClass;
-        warningBox.innerHTML = `
-            <div class="aqi-title">Chỉ số AQI hiện tại: ${aqiValue} - ${levelName}</div>
-            <div class="aqi-desc">${message}</div>
-        `;
+        btn.className += " active";
     }
 
     const labelsData = []; 
@@ -126,7 +100,6 @@
             options: { 
                 animation: false,
                 plugins: {
-                    // Cấu hình hiện số trên đồ thị
                     datalabels: {
                         align: 'top', 
                         color: color, 
@@ -136,24 +109,28 @@
                         }
                     }
                 },
-                layout: {
-                    padding: { top: 30 } 
-                }
+                layout: { padding: { top: 30 } }
             }
         });
     }
 
+    // Khởi tạo đồ thị
     charts['Rel_IAQ']  = createChart('chart_Rel_IAQ', 'Chỉ số Rel_IAQ', 'rgba(33, 150, 243, 1)'); 
     charts['IAQ']      = createChart('chart_IAQ', 'Chỉ số IAQ', 'rgba(244, 67, 54, 1)');      
     charts['TVOC']     = createChart('chart_TVOC', 'Nồng độ TVOC', 'rgba(76, 175, 80, 1)');   
     charts['eCO2']     = createChart('chart_eCO2', 'Nồng độ eCO2', 'rgba(255, 152, 0, 1)');   
     charts['EtOH']     = createChart('chart_EtOH', 'Nồng độ EtOH', 'rgba(156, 39, 176, 1)');  
-    charts['Temp']     = createChart('chart_Temp', 'Nhiệt độ (°C)', 'rgba(233, 30, 99, 1)');  
+    charts['Temp']     = createChart('chart_Temp', 'Nhiệt độ (°F)', 'rgba(233, 30, 99, 1)');  
     charts['Humidity'] = createChart('chart_Humidity', 'Độ ẩm (%)', 'rgba(0, 188, 212, 1)');  
 
     const socket = io();
 
-    socket.on('update_data', function(msg) {
+    // LUỒNG XỬ LÝ CHUNG: NHẬN JSON CHỨA CẢ SENSOR VÀ AI
+    socket.on('update_sensor', function(msg) {
+        
+        // ==========================================
+        // 1. CẬP NHẬT BIỂU ĐỒ CẢM BIẾN
+        // ==========================================
         const now = new Date().toLocaleTimeString();
         if (labelsData.length > 20) labelsData.shift();
         labelsData.push(now);
@@ -166,12 +143,29 @@
                     if (dataset.length > 20) dataset.shift();
                     dataset.push(value);
                     charts[key].update(); 
-
-                    if (key === 'IAQ' || key === 'Rel_IAQ') {
-                        updateAQIWarning(value);
-                    }
                 }
             }
+        }
+
+        // ==========================================
+        // 2. CẬP NHẬT HỘP HIỂN THỊ DỰ ĐOÁN AI
+        // ==========================================
+        if (msg.AI_Label && msg.AI_Label !== "unknown") {
+            const warningBox = document.getElementById('aqiWarningBox');
+            let rawValue = parseFloat(msg.AI_Confidence).toFixed(2);
+            let predictedValue = (rawValue / 80).toFixed(2);
+            let cssClass = "bg-tot"; 
+            let alertText = "Mức độ an toàn";
+            if (predictedValue > 50)  { cssClass = "bg-tb"; alertText = "Mức trung bình (Chấp nhận được)"; }
+            if (predictedValue > 100) { cssClass = "bg-kem"; alertText = "Không khí kém (Nhạy cảm nên hạn chế ra ngoài)"; }
+            if (predictedValue > 150) { cssClass = "bg-xau"; alertText = "Mức độ ô nhiễm (Ảnh hưởng sức khỏe)"; }
+            if (predictedValue > 200) { cssClass = "bg-ratxau"; alertText = "Rất ô nhiễm (Cảnh báo khẩn cấp)"; }
+            if (predictedValue > 300) { cssClass = "bg-nguyhai"; alertText = "Nguy hại (Báo động đỏ)"; }
+            warningBox.className = "aqi-box " + cssClass;
+            warningBox.innerHTML = `
+                <div class="aqi-title">AI DỰ ĐOÁN XU HƯỚNG: ${predictedValue}</div>
+                <div class="aqi-desc">${alertText} (Mô hình Hồi quy)</div>
+            `;
         }
     });
 </script>
